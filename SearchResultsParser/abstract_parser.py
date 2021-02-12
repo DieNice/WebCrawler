@@ -8,10 +8,10 @@ from .urlsdto import UrlsDTO
 
 
 class AbstractResultParser(ABC):
-    def search(self, query: str, tld: str, num: int, stop: int, pause: int) -> UrlsDTO:
+    def search(self, query: str, tld: str, num_res: int, stop: int, pause: int) -> UrlsDTO:
         normilizequery: str = self.getquery(query)
         res = []
-        for j in search(normilizequery, tld=tld, num=num, stop=stop, pause=pause):
+        for j in search(normilizequery, tld=tld, num=num_res, stop=stop, pause=pause):
             res.append(j)
         return UrlsDTO(res)
 

@@ -7,12 +7,13 @@ class SearchFacade:
         self.searchers = searchers
         self.filter = filter
 
-    def search_operation(self, query: str, numresults: int) -> UrlsDTO:
+    def search_operation(self, queries: [str], numresults: int) -> UrlsDTO:
         pause = 10
         results: UrlsDTO = UrlsDTO()
         numsearchers = len(self.searchers)
-        for i in range(numsearchers):
-            results = results + self.searchers[i].search(query, "co.in", numresults, numresults, pause)
+        for query in queries:
+            for i in range(numsearchers):
+                results = results + self.searchers[i].search(query, "co.in", numresults, numresults, pause)
         if self.filter is not None:
             results = self.filter.filtering(results)
         return results
