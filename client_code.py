@@ -7,10 +7,15 @@ from SearchResultsParser.Filter.filter_urlsdto import FilterUrlsDTO
 from SearchResultsParser.Filter.basic_filter import BasicFilter
 from SearchResultsParser.Filter.replays_decorator import ReplaysFilter
 from SearchResultsParser.Filter.officalsite_decorator import OfficalSiteFilter
-
+from Mongodb.config import DevelopingConfig
+from Mongodb.models import Page
+from Grabber.grabber import Grabber
+from mongoengine import *
+import datetime
 import json
 
 if __name__ == '__main__':
+
     namecompany = input('Введите название компании:')
     linkofficalcompany = input('Введите ссылку на официальный сайт компании:')
     numresults = int(input('Введите количество результатов поисковой выдачи:'))
@@ -49,3 +54,24 @@ if __name__ == '__main__':
     print('Начало парсинга поисковой выдачи:')
     startlinks = sf.search_operation(query_list, numresults)
     print('Конец парсинга поисковой выдачи')
+
+    pages: [Page] = []
+    print('Начало скрапинга страниц:')
+    grabber = Grabber()
+    count = 0
+    for link in startlinks:
+        textnow = grabber.get_text(link)
+        pages.append(Page(title=link, content=textnow))
+    print('Конец скрапинга страниц')
+
+    print('Подключение к базе данных')
+    try:
+        connect = DevelopingConfig('crawlerdb', 'root', 'rootpassword', 27017)
+    except Exception as ex:
+        print('Не удалось подключиться к базе данных:', ex)
+    print('Подключение к базе данных успшено!')
+    print('Сохранение результатов в базу данных.')
+    del grabber
+    for page in pages:
+        page.save()
+    print('Сохранение данных прошло успешно')

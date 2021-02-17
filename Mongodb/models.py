@@ -1,5 +1,4 @@
-from mongoengine.document import Document
-from mongoengine.fields import *
+from mongoengine import *
 from datetime import datetime
 
 
