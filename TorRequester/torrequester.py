@@ -177,6 +177,9 @@ class TorRequester(object):
         '''
         socket.socket = self._socket
 
+    def stop(self)->None:
+        self._stopSocks()
+
     def _runTests(self):
         """Setup tests upon initialization."""
         if self.use_tor:

@@ -1,12 +1,19 @@
 version: '3.7'
 services:
-  mongodb_container:
-    container_name: database
-    image: mongo:latest
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: rootpassword
-    volumes:
-      - /databases/webcrawler/mongodb/data/db:/data/db
-    ports:
-      - 27017:27017
+    mongodb:
+        image: mongo:latest
+        container_name: database_crawler
+        hostname: database_crawler
+        volumes:
+            - ./.docker/mongodb/webcrawler/mongod.conf:/etc/mongod.conf
+            - ./.docker/mongodb/webcrawler/initdb.d/:/docker-entrypoint-initdb.d/
+            - ./.docker/mongodb/webcrawler/data/db/:/data/db/
+            - ./.docker/mongodb/webcrawler/data/log/:/var/log/mongodb/
+        env_file:
+            - .env
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+            MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+            MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
+        ports:
+            - "27017:27017"

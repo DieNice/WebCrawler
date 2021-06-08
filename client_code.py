@@ -13,13 +13,19 @@ from Grabber.grabber import Grabber
 from mongoengine import *
 import datetime
 import json
+import click
 
 if __name__ == '__main__':
 
-    namecompany = input('Введите название компании:')
-    linkofficalcompany = input('Введите ссылку на официальный сайт компании:')
-    numresults = int(input('Введите количество результатов поисковой выдачи:'))
-    choosesearhes = input("Выберите поисковые системы, через пробел:\n1. Google \n2. Yandex\n3. Rambler\n")
+    # namecompany = input('Введите название компании:')
+    # linkofficalcompany = input('Введите ссылку на официальный сайт компании:')
+    # numresults = int(input('Введите количество результатов поисковой выдачи:'))
+    # choosesearhes = input("Выберите поисковые системы, через пробел:\n1. Google \n2. Yandex\n3. Rambler\n")
+
+    namecompany = "Спортмастер"
+    linkofficalcompany = "https://www.sportmaster.ru/?nomobile=1&gclid=CjwKCAjwqvyFBhB7EiwAER786R4mSHPTstQ16BTvx7Mgp9gRGaiqsbf7AZfPDyyT57KYA2RlclH2choCUh8QAvD_BwE"
+    numresults = 30
+    choosesearhes = '1 2 3'
     choosesearhes = choosesearhes.split(' ')
 
     searchers: AbstractResultParser = []
@@ -32,8 +38,8 @@ if __name__ == '__main__':
             searchers.append(RamblerParser())
     print('Поисковые системы выбраны\n')
 
-    deep = int(input('Введите глубину поиска:'))
-
+    # deep = int(input('Введите глубину поиска:'))
+    deep = 1
     try:
         with open('query_patterns.json', 'r') as f:
             query_patterns = json.load(f)
@@ -59,19 +65,25 @@ if __name__ == '__main__':
     print('Начало скрапинга страниц:')
     grabber = Grabber()
     count = 0
-    for link in startlinks:
-        textnow = grabber.get_text(link)
-        pages.append(Page(title=link, content=textnow))
+    with click.progressbar(startlinks) as bar:
+        for link in bar:
+            try:
+                textnow = grabber.get_text(link)
+            except Exception as e:
+                print(f"\nCan't connection to page. Connection timed out {Link}")
+            else:
+                pages.append(Page(title=link, content=textnow))
     print('Конец скрапинга страниц')
 
+    grabber.off_tor()
     print('Подключение к базе данных')
     try:
-        connect = DevelopingConfig('crawlerdb', 'root', 'rootpassword', 27017)
+        connect = DevelopingConfig('crawlerdb', 'root', 'root', 27017)
     except Exception as ex:
         print('Не удалось подключиться к базе данных:', ex)
-    print('Подключение к базе данных успшено!')
+    print('Подключение к базе данных успешно!')
     print('Сохранение результатов в базу данных.')
-    del grabber
+
     for page in pages:
         page.save()
     print('Сохранение данных прошло успешно')

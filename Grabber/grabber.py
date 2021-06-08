@@ -35,3 +35,6 @@ class Grabber:
         file = open(str(self.path) + '/' + str(self.filename), mode="a")
         file.write(text)
         file.close()
+
+    def off_tor(self):
+        self.torrequester.stop()
