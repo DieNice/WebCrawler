@@ -61,11 +61,23 @@ class SentimentAnalyzer():
                     if 'skip' in result:
                         count_skip += 1
                         sum_skip += result['skip']
+                try:
+                    result_positive = sum_positive / count_positive
+                except ZeroDivisionError:
+                    result_positive = 0
+                try:
+                    result_negative = sum_negative / count_negative
+                except ZeroDivisionError:
+                    result_negative = 0
+                try:
+                    result_neutral = sum_neutral / count_neutral
+                except ZeroDivisionError:
+                    result_neutral = 0
+                try:
+                    result_skip = sum_skip / count_skip
+                except ZeroDivisionError:
+                    result_skip = 0
 
-                result_positive = sum_positive / count_positive
-                result_negative = sum_negative / count_negative
-                result_neutral = sum_neutral / count_neutral
-                result_skip = sum_skip / count_skip
                 print(f"\n{page.title}")
                 print(f"\nPositive:{result_positive}")
                 print(f"\nNegative:{result_negative}")

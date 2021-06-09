@@ -249,7 +249,13 @@ class TorRequester(object):
 
     async def _checkConvert(self, url, headers=None):
         """Check if we need to return a BeautifulSoup object (or raw res)."""
-        browser = await launch()
+        browser = await launch(headless=True, args=[
+            '--no-sandbox',
+            '--single-process',
+            '--disable-dev-shm-usage',
+            '--disable-gpu',
+            '--no-zygote'
+        ])
         page = await browser.newPage()
         self._startSocks()
         await page.goto(url)
@@ -280,13 +286,13 @@ class TorRequester(object):
             new_ip = self.check_ip()
             # If the ip didn't change, but we want it to...
             if new_ip == self.ip and self.enforce_rotate:
-                print("IP did not change upon rotation. Retrying...")
+                print("\nIP did not change upon rotation. Retrying...")
                 time.sleep(2)
                 count += 1
                 continue
             else:
                 self.ip = new_ip
-                print("IP successfully rotated. New IP: {}".format(self.ip))
+                print("\nIP successfully rotated. New IP: {}".format(self.ip))
                 break
 
     def get(self, url, headers=None):

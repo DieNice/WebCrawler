@@ -70,7 +70,7 @@ if __name__ == '__main__':
             try:
                 textnow = grabber.get_text(link)
             except Exception as e:
-                print(f"\nCan't connection to page. Connection timed out {Link}")
+                print(f"\nCan't connection to page. Connection timed out {link}:{str(e)}")
             else:
                 pages.append(Page(title=link, content=textnow))
     print('Конец скрапинга страниц')
