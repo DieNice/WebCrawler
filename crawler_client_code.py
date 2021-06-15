@@ -12,78 +12,170 @@ from Mongodb.models import Page
 from Grabber.grabber import Grabber
 from mongoengine import *
 import datetime
+import logging
+import validators
 import json
 import click
+import logging
+
+
+def check_name_company(name_company: str) -> bool:
+    '''check function of namecompany'''
+    if len(name_company) == 0:
+        raise Exception('Company name cannot be empty')
+    if name_company.isdigit():
+        raise Exception('Company name cannot contain only numbers')
+    if validators.url(name_company):
+        raise Exception('Comapany name cannot be URL')
+    return True
+
+
+def check_official_link(official_link: str) -> bool:
+    '''check function of offical link company'''
+    if not validators.url(official_link):
+        raise Exception('Incorrect official site URL')
+    return True
+
+
+def check_num_results(num_results: int) -> bool:
+    '''check function num results'''
+    if not str(num_results).isdigit():
+        raise Exception('The number of search results is incorrect')
+    if num_results < 0:
+        raise Exception('The number of search result can\'t be than less 0')
+    return True
+
+
+def check_choose_searches(choose_searches: str) -> bool:
+    '''check function choose searches'''
+    correct_numbers = ['1', '2', '3']
+    choose_searches = choose_searches.split(' ')
+    for choose in choose_searches:
+        if not choose.isdigit():
+            raise Exception(f"{choose} is not number of search engine")
+        if not choose in correct_numbers:
+            raise Exception(f"{choose} is not exists number search engine")
+    return True
+
+
+def check_query_patterns(filepath: str) -> bool:
+    '''check function query patterns'''
+    with open(filepath, 'r') as f:
+        try:
+            query_patterns = json.load(f)
+        except json.decoder.JSONDecodeError:
+            raise Exception("Invalid JSON")
+        else:
+            if len(query_patterns) > 1:
+                raise Exception('The number of keys in the configuration file cannot be more than 1 key \"queries\"')
+            if len(query_patterns) < 1:
+                raise Exception('No fields in configuration query patterns')
+        queries: str = query_patterns['queries']
+        for query in queries:
+            if query.find('{}') < 0:
+                raise Exception(f"Query \"{query}\" missing brackets " + "{}")
+    return True
+
+
+def check_deep(deep: int) -> bool:
+    '''check function deep'''
+    if not str(deep).isdigit():
+        raise Exception('The deep is incorrect')
+    if deep < 0:
+        raise Exception('The deep can\'t be than less or equal 0')
+    return True
+
 
 if __name__ == '__main__':
+    logging.basicConfig(
+        level=logging.NOTSET,
+        filename="crawler_logs.log",
+        format="%(asctime)s - %(module)s - %(levelname)s - %(funcName)s: %(lineno)d - %(message)s",
+        datefmt='%H:%M:%S',
+    )
+    name_company = input('Enter your company name:')
+    link_official_company = input('Enter the link to the official website of the company:')
+    num_results = int(input('Enter the number of search results:'))
+    choose_searches = input("Select search  engines, separated by space:\n1. Google \n2. Yandex\n3. Rambler\n")
+    deep = int(input('Введите глубину поиска:'))
 
-    # namecompany = input('Введите название компании:')
-    # linkofficalcompany = input('Введите ссылку на официальный сайт компании:')
-    # numresults = int(input('Введите количество результатов поисковой выдачи:'))
-    # choosesearhes = input("Выберите поисковые системы, через пробел:\n1. Google \n2. Yandex\n3. Rambler\n")
+    check_name_company(name_company)
+    check_official_link(link_official_company)
+    check_num_results(num_results)
+    check_choose_searches(choose_searches)
+    check_query_patterns('query_patterns.json')
+    check_deep(deep)
 
-    namecompany = "Спортмастер"
-    linkofficalcompany = "https://www.sportmaster.ru/?nomobile=1&gclid=CjwKCAjwqvyFBhB7EiwAER786R4mSHPTstQ16BTvx7Mgp9gRGaiqsbf7AZfPDyyT57KYA2RlclH2choCUh8QAvD_BwE"
-    numresults = 30
-    choosesearhes = '1 2 3'
-    choosesearhes = choosesearhes.split(' ')
+    choose_searches = choose_searches.split(' ')
 
     searchers: AbstractResultParser = []
-    for i in choosesearhes:
-        if "1" in choosesearhes:
+    for i in choose_searches:
+        if "1" == i:
             searchers.append(GoogleParser())
-        elif "2" in choosesearhes:
+        elif "2" == i:
             searchers.append(YandexParser())
-        elif "3" in choosesearhes:
+        elif "3" == i:
             searchers.append(RamblerParser())
-    print('Поисковые системы выбраны\n')
+    print('Search Engines Selected\n')
+    logging.info('Search Engines Selected')
 
-    # deep = int(input('Введите глубину поиска:'))
-    deep = 1
     try:
         with open('query_patterns.json', 'r') as f:
             query_patterns = json.load(f)
     except FileNotFoundError:
-        print('Файл конфигурации запросов не найден!')
+        print('Request config file not found!')
+        logging.error('Request config file not found!')
     else:
-        print('Файл конфигурации успешно считан!')
+        print('Configuration file read successfully!')
+        logging.info('Configuration file read successfully!')
     query_list = []
     for i in query_patterns['queries']:
-        query_list.append(i.format(namecompany))
+        query_list.append(i.format(name_company))
 
     filter: FilterUrlsDTO = BasicFilter()
     filter = ReplaysFilter(filter)
-    filter = OfficalSiteFilter(filter, linkofficalcompany)
-    print('Фильтры ссылок установлены:' + filter.getDescription())
+    filter = OfficalSiteFilter(filter, link_official_company)
+    print('Link filters installed:' + filter.getDescription())
+    logging.info('Link filters installed:' + filter.getDescription())
 
     sf = SearchFacade(searchers, filter)
-    print('Начало парсинга поисковой выдачи:')
-    startlinks = sf.search_operation(query_list, numresults)
-    print('Конец парсинга поисковой выдачи')
+    print('Start parsing search results:')
+    logging.info("Start parsing search results:")
+    start_links = sf.search_operation(query_list, num_results)
+    print('End of parsing search results')
+    logging.info("End of parsing search results")
 
     pages: [Page] = []
-    print('Начало скрапинга страниц:')
+    print('Start scraping pages:')
+    logging.info('Start scraping pages:')
+
     grabber = Grabber()
-    count = 0
-    with click.progressbar(startlinks) as bar:
+    with click.progressbar(start_links) as bar:
         for link in bar:
             try:
-                textnow = grabber.get_text(link)
+                now_text = grabber.get_text(link)
             except Exception as e:
-                print(f"\nCan't connection to page. Connection timed out {link}:{str(e)}")
+                print(f"\nCan't connection to page. {link}:{str(e)}")
+                logging.error(f"\nCan't connection to page. {link}:{str(e)}")
             else:
-                pages.append(Page(title=link, content=textnow))
-    print('Конец скрапинга страниц')
+                pages.append(Page(title=link, content=now_text))
+    print('End of scraping pages')
+    logging.info('End of scraping pages')
 
     grabber.off_tor()
-    print('Подключение к базе данных')
+    print('Database connection')
+    logging.info('Database connection')
     try:
         connect = DevelopingConfig('crawlerdb', 'root', 'root', 27017)
     except Exception as ex:
-        print('Не удалось подключиться к базе данных:', ex)
-    print('Подключение к базе данных успешно!')
-    print('Сохранение результатов в базу данных.')
+        print('Failed to connect to database:', ex)
+        logging.error(f'Failed to connect to database:{ex}')
+    print('Database connection successful!\nSaving the results to the database\n')
+    logging.info('Database connection successful!\nSaving the results to the database')
 
-    for page in pages:
-        page.save()
-    print('Сохранение данных прошло успешно')
+    with click.progressbar(pages, label="Saving to database") as bar:
+        for page in bar:
+            logging.info(f"Page saved {page.title}")
+            page.save()
+    print('Saving data was successful')
+    logging.info('Saving data was successful')

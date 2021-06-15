@@ -1,4 +1,5 @@
 """Base class for webcrawler that communicates with Tor client."""
+import logging
 import socket
 import socks
 import requests
@@ -12,7 +13,8 @@ from stem import Signal
 from stem.control import Controller
 from stem.connection import authenticate_none, authenticate_password
 import asyncio
-from pyppeteer import launch
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
 class TorRequester(object):
@@ -194,7 +196,7 @@ class TorRequester(object):
             if self.rotate_ips:
                 # Redraw the circuit a few times and hope that at least 2 of
                 # the external IPs are different.
-                print("Validating ip rotation...")
+                logging.info("Validating ip rotation...")
                 ips = list()
                 # Define the number of rotations we will attempt.
                 # Note that the testing is different than the actual rotation
@@ -208,8 +210,8 @@ class TorRequester(object):
                         ips.append(self.check_ip())
                         self._newCircuit()
                         time.sleep(2)
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        logging.warning(e)
                 print("ips: ", ips)
                 # If we only got one IP, rotation probably isn't working
                 if len(set(ips)) < 2:
@@ -249,18 +251,17 @@ class TorRequester(object):
 
     async def _checkConvert(self, url, headers=None):
         """Check if we need to return a BeautifulSoup object (or raw res)."""
-        browser = await launch(headless=True, args=[
-            '--no-sandbox',
-            '--single-process',
-            '--disable-dev-shm-usage',
-            '--disable-gpu',
-            '--no-zygote'
-        ])
-        page = await browser.newPage()
+        options = Options()
+        # options.add_argument("no-sandbox")
+        options.add_argument("headless")
+        # options.add_argument("start-maximized")
+        # options.add_argument("window-size=1900,1080")
+        browser = webdriver.Chrome(chrome_options=options, executable_path='/usr/bin/chromedriver')
+
         self._startSocks()
-        await page.goto(url)
-        res = await page.content()
-        await browser.close()
+        browser.get(url)
+        res = browser.page_source
+        browser.quit()
         self._stopSocks()
         return res
 
@@ -286,17 +287,17 @@ class TorRequester(object):
             new_ip = self.check_ip()
             # If the ip didn't change, but we want it to...
             if new_ip == self.ip and self.enforce_rotate:
-                print("\nIP did not change upon rotation. Retrying...")
+                logging.info("\nIP did not change upon rotation. Retrying...")
                 time.sleep(2)
                 count += 1
                 continue
             else:
                 self.ip = new_ip
-                print("\nIP successfully rotated. New IP: {}".format(self.ip))
+                logging.info("\nIP successfully rotated. New IP: {}".format(self.ip))
                 break
 
     def get(self, url, headers=None):
-        """Return string html content of page from GET using pyppeeter and tor network."""
+        """Return string html content of page from GET using selenium and tor network."""
         res = asyncio.get_event_loop().run_until_complete(self._checkConvert(url, headers))
         self._updateCount()
         return res

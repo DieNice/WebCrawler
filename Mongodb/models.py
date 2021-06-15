@@ -10,3 +10,6 @@ class Page(Document):
     negative_sentiment = FloatField()
     neutral_sentiment = FloatField()
     skip_sentiment = FloatField()
+
+    def __str__(self):
+        return self.title

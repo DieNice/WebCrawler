@@ -1,19 +1,20 @@
+import logging
 import os
 from bs4 import BeautifulSoup as bs
 from TorRequester.torrequester import TorRequester
 
 
 class Grabber:
-    url = ""
+    '''Class for scraping text from html pages'''
     filename = ""
     path = ""
 
     def __init__(self) -> None:
-        self.torrequester = TorRequester(ctrl_pass='mypassword', n_requests=5)
+        self.tor_requester = TorRequester(ctrl_pass='mypassword', n_requests=5)
 
     def get_text(self, url_address):
-        self.url = url_address
-        response = self.torrequester.get(self.url)
+        ''':return parsed text from url by bs'''
+        response = self.tor_requester.get(url_address)
         soup = bs(response, 'html.parser')
         result = soup.text
         return result
@@ -22,8 +23,8 @@ class Grabber:
         '''        Get path and filename for saving article by splitting URL.
                If the URL ends with some.html, then the previous (-2) element
                of the path is taken to form the path and the filename = some.html.txt respectively.'''
-        self.url = url_address
-        path_arr = self.url.split('/')
+        url = url_address
+        path_arr = url.split('/')
         if path_arr[-1] != '':
             self.filename = path_arr[-1] + ".txt"
             self.path = os.getcwd() + "/".join(path_arr[1:-1])
@@ -37,4 +38,5 @@ class Grabber:
         file.close()
 
     def off_tor(self):
-        self.torrequester.stop()
+        self.tor_requester.stop()
+        logging.info("tor network off")
