@@ -163,19 +163,16 @@ if __name__ == '__main__':
     logging.info('End of scraping pages')
 
     grabber.off_tor()
-    print('Database connection')
-    logging.info('Database connection')
-    try:
-        connect = DevelopingConfig('crawlerdb', 'root', 'root', 27017)
-    except ConnectionError as ex:
-        print('Failed to connect to database:', ex)
-        logging.error(f'Failed to connect to database:{ex}')
-    print('Database connection successful!\nSaving the results to the database\n')
-    logging.info('Database connection successful!\nSaving the results to the database')
+    connect = DevelopingConfig('crawlerdb', 'root', 'root', 27017)
 
     with click.progressbar(pages, label="Saving to database") as bar:
         for page in bar:
             logging.info(f"Page saved {page.title}")
-            page.save()
+            try:
+                page.save()
+            except Exception as exception:
+                logging.error(f'Failed to connect to database:{exception}')
+                raise Exception('Failed to connect to database') from exception
+
     print('Saving data was successful')
     logging.info('Saving data was successful')
