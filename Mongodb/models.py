@@ -1,8 +1,9 @@
-from mongoengine import *
 from datetime import datetime
+from mongoengine import Document, StringField, DateTimeField, FloatField
 
 
 class Page(Document):
+    '''Page model'''
     title = StringField(required=True)
     content = StringField(required=True)
     retrieved = DateTimeField(default=datetime.now())
@@ -11,5 +12,5 @@ class Page(Document):
     neutral_sentiment = FloatField()
     skip_sentiment = FloatField()
 
-    def __str__(self):
-        return self.title
+    def __str__(self) -> str:
+        return str(self.title)
