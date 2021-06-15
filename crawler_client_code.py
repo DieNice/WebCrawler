@@ -1,3 +1,8 @@
+'''Main file use for automatic scraping html pages'''
+import json
+import logging
+import click
+import validators
 from SearchResultsParser.search_facade import SearchFacade
 from SearchResultsParser.abstract_parser import AbstractResultParser
 from SearchResultsParser.google_parser import GoogleParser
@@ -10,22 +15,15 @@ from SearchResultsParser.Filter.officalsite_decorator import OfficalSiteFilter
 from Mongodb.config import DevelopingConfig
 from Mongodb.models import Page
 from Grabber.grabber import Grabber
-from mongoengine import *
-import datetime
-import logging
-import validators
-import json
-import click
-import logging
 
 
-def check_name_company(name_company: str) -> bool:
-    '''check function of namecompany'''
-    if len(name_company) == 0:
+def check_name_company(name: str) -> bool:
+    '''check function of name_company'''
+    if len(name) == 0:
         raise Exception('Company name cannot be empty')
-    if name_company.isdigit():
+    if name.isdigit():
         raise Exception('Company name cannot contain only numbers')
-    if validators.url(name_company):
+    if validators.url(name):
         raise Exception('Comapany name cannot be URL')
     return True
 
@@ -37,20 +35,20 @@ def check_official_link(official_link: str) -> bool:
     return True
 
 
-def check_num_results(num_results: int) -> bool:
+def check_num_results(num: int) -> bool:
     '''check function num results'''
-    if not str(num_results).isdigit():
+    if not str(num).isdigit():
         raise Exception('The number of search results is incorrect')
-    if num_results < 0:
+    if num < 0:
         raise Exception('The number of search result can\'t be than less 0')
     return True
 
 
-def check_choose_searches(choose_searches: str) -> bool:
+def check_choose_searches(choose_str: str) -> bool:
     '''check function choose searches'''
     correct_numbers = ['1', '2', '3']
-    choose_searches = choose_searches.split(' ')
-    for choose in choose_searches:
+    choose_str = choose_str.split(' ')
+    for choose in choose_str:
         if not choose.isdigit():
             raise Exception(f"{choose} is not number of search engine")
         if not choose in correct_numbers:
@@ -60,28 +58,29 @@ def check_choose_searches(choose_searches: str) -> bool:
 
 def check_query_patterns(filepath: str) -> bool:
     '''check function query patterns'''
-    with open(filepath, 'r') as f:
+    with open(filepath, 'r') as file:
         try:
-            query_patterns = json.load(f)
-        except json.decoder.JSONDecodeError:
-            raise Exception("Invalid JSON")
+            query_json = json.load(file)
+        except json.decoder.JSONDecodeError as json_exception:
+            raise Exception("Invalid JSON") from json_exception
         else:
-            if len(query_patterns) > 1:
-                raise Exception('The number of keys in the configuration file cannot be more than 1 key \"queries\"')
-            if len(query_patterns) < 1:
+            if len(query_json) > 1:
+                raise Exception('The number of keys in the configuration'
+                                ' file cannot be more than 1 key \"queries\"')
+            if len(query_json) < 1:
                 raise Exception('No fields in configuration query patterns')
-        queries: str = query_patterns['queries']
-        for query in queries:
-            if query.find('{}') < 0:
-                raise Exception(f"Query \"{query}\" missing brackets " + "{}")
+        queries: str = query_json['queries']
+        for now_query in queries:
+            if now_query.find('{}') < 0:
+                raise Exception(f"Query \"{now_query}\" missing brackets " + "{}")
     return True
 
 
-def check_deep(deep: int) -> bool:
+def check_deep(search_deep: int) -> bool:
     '''check function deep'''
-    if not str(deep).isdigit():
+    if not str(search_deep).isdigit():
         raise Exception('The deep is incorrect')
-    if deep < 0:
+    if search_deep < 0:
         raise Exception('The deep can\'t be than less or equal 0')
     return True
 
@@ -96,7 +95,8 @@ if __name__ == '__main__':
     name_company = input('Enter your company name:')
     link_official_company = input('Enter the link to the official website of the company:')
     num_results = int(input('Enter the number of search results:'))
-    choose_searches = input("Select search  engines, separated by space:\n1. Google \n2. Yandex\n3. Rambler\n")
+    choose_searches = input("Select search  engines,"
+                            " separated by space:\n1. Google \n2. Yandex\n3. Rambler\n")
     deep = int(input('Введите глубину поиска:'))
 
     check_name_company(name_company)
@@ -110,11 +110,11 @@ if __name__ == '__main__':
 
     searchers: AbstractResultParser = []
     for i in choose_searches:
-        if "1" == i:
+        if i == "1":
             searchers.append(GoogleParser())
-        elif "2" == i:
+        elif i == "2":
             searchers.append(YandexParser())
-        elif "3" == i:
+        elif i == "3":
             searchers.append(RamblerParser())
     print('Search Engines Selected\n')
     logging.info('Search Engines Selected')
@@ -129,16 +129,16 @@ if __name__ == '__main__':
         print('Configuration file read successfully!')
         logging.info('Configuration file read successfully!')
     query_list = []
-    for i in query_patterns['queries']:
-        query_list.append(i.format(name_company))
+    for query in query_patterns['queries']:
+        query_list.append(query.format(name_company))
 
-    filter: FilterUrlsDTO = BasicFilter()
-    filter = ReplaysFilter(filter)
-    filter = OfficalSiteFilter(filter, link_official_company)
-    print('Link filters installed:' + filter.getDescription())
-    logging.info('Link filters installed:' + filter.getDescription())
+    urls_filter: FilterUrlsDTO = BasicFilter()
+    urls_filter = ReplaysFilter(urls_filter)
+    urls_filter = OfficalSiteFilter(urls_filter, link_official_company)
+    print('Link filters installed:' + urls_filter.getDescription())
+    logging.info('Link filters installed:' + urls_filter.getDescription())
 
-    sf = SearchFacade(searchers, filter)
+    sf = SearchFacade(searchers, urls_filter)
     print('Start parsing search results:')
     logging.info("Start parsing search results:")
     start_links = sf.search_operation(query_list, num_results)
@@ -154,9 +154,9 @@ if __name__ == '__main__':
         for link in bar:
             try:
                 now_text = grabber.get_text(link)
-            except Exception as e:
-                print(f"\nCan't connection to page. {link}:{str(e)}")
-                logging.error(f"\nCan't connection to page. {link}:{str(e)}")
+            except Exception as exception:
+                print(f"\nCan't connection to page. {link}:{str(exception)}")
+                logging.error(f"\nCan't connection to page. {link}:{str(exception)}")
             else:
                 pages.append(Page(title=link, content=now_text))
     print('End of scraping pages')
@@ -167,7 +167,7 @@ if __name__ == '__main__':
     logging.info('Database connection')
     try:
         connect = DevelopingConfig('crawlerdb', 'root', 'root', 27017)
-    except Exception as ex:
+    except ConnectionError as ex:
         print('Failed to connect to database:', ex)
         logging.error(f'Failed to connect to database:{ex}')
     print('Database connection successful!\nSaving the results to the database\n')
