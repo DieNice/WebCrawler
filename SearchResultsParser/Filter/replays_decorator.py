@@ -1,14 +1,16 @@
+from SearchResultsParser.urlsdto import UrlsDTO
 from .filter_decorator import FilterDecorator
 from .filter_urlsdto import FilterUrlsDTO
-from SearchResultsParser.urlsdto import UrlsDTO
 
 
 class ReplaysFilter(FilterDecorator):
-    def __init__(self, filter: FilterUrlsDTO):
+    '''Class for filtering replays in urls'''
+
+    def __init__(self, filter: FilterUrlsDTO) -> None:
         self.filter = filter
 
-    def getDescription(self):
-        return self.filter.getDescription() + ",Replays filter"
+    def get_description(self) -> str:
+        return self.filter.get_description() + ",Replays filter"
 
     def filtering(self, data: UrlsDTO = None) -> UrlsDTO:
         subset = set()

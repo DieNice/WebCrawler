@@ -2,6 +2,7 @@ from .abstract_parser import AbstractResultParser
 
 
 class GoogleParser(AbstractResultParser):
+    '''Google search engine class'''
     def get_query(self, query: str) -> str:
         return query
 

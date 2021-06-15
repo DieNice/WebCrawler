@@ -135,8 +135,8 @@ if __name__ == '__main__':
     urls_filter: FilterUrlsDTO = BasicFilter()
     urls_filter = ReplaysFilter(urls_filter)
     urls_filter = OfficalSiteFilter(urls_filter, link_official_company)
-    print('Link filters installed:' + urls_filter.getDescription())
-    logging.info('Link filters installed:' + urls_filter.getDescription())
+    print('Link filters installed:' + urls_filter.get_description())
+    logging.info('Link filters installed:' + urls_filter.get_description())
 
     sf = SearchFacade(searchers, urls_filter)
     print('Start parsing search results:')

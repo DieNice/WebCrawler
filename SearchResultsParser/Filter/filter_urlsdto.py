@@ -4,15 +4,13 @@ from SearchResultsParser.urlsdto import UrlsDTO
 
 class FilterUrlsDTO(ABC):
     '''Filtering class'''
-    def __init__(self):
-        super.__init__()
+    def __init__(self) -> None:
         self._description = "Unknown filter"
 
-    def getDescription(self):
+    def get_description(self) -> str:
         ''':return description of all filters'''
         return self._description
 
     @abstractmethod
     def filtering(self, data: UrlsDTO = None) -> UrlsDTO:
         ''':return filtered UrlsDTO'''
-        pass

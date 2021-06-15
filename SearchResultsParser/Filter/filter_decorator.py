@@ -1,9 +1,10 @@
-from .filter_urlsdto import FilterUrlsDTO
-from abc import ABC, abstractclassmethod
+from abc import abstractclassmethod
 from SearchResultsParser.urlsdto import UrlsDTO
+from .filter_urlsdto import FilterUrlsDTO
 
 
 class FilterDecorator(FilterUrlsDTO):
+    '''class decorator for filtering'''
     @abstractclassmethod
-    def filtering(self, data: UrlsDTO = None) -> UrlsDTO:
+    def filtering(cls, data: UrlsDTO = None) -> UrlsDTO:
         pass

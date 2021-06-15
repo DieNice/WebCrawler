@@ -1,10 +1,12 @@
 class UrlsDTO:
+    '''Data transfer class'''
     _urls = [str]
 
-    def __init__(self, urls=[]) -> None:
+    def __init__(self, urls=None) -> None:
         self._urls = urls
 
     def add(self, newdata: str) -> None:
+        '''added new url to class'''
         self._urls.append(newdata)
 
     def __add__(self, other):
@@ -26,4 +28,5 @@ class UrlsDTO:
         return self._urls[item]
 
     def append(self, new: str) -> None:
+        '''added new url to class'''
         self._urls.append(new)
