@@ -1,23 +1,20 @@
 """Base class for webcrawler that communicates with Tor client."""
 import logging
 import socket
-import socks
-import requests
-from bs4 import BeautifulSoup
+import os
 import time
 import warnings
-import os
-from collections import defaultdict
+import socks
+import requests
 # Stem is a module for dealing with tor
 from stem import Signal
 from stem.control import Controller
 from stem.connection import authenticate_none, authenticate_password
-import asyncio
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-class TorRequester(object):
+class TorRequester():
     """
     TorRequester is a layer on top of the requests module.
 
@@ -127,40 +124,40 @@ class TorRequester(object):
 
         self.tor_controller = None
         if self.use_tor:
-            self._setTorController()
+            self.__set_tor_controller()
 
         # Use BeautifulSoup to parse html GET requests
         self.use_bs = use_bs
 
         # The control port password
         self.ctrl_pass = None
-        self._setCtrlPass(ctrl_pass)
+        self.__set_ctrl_pass(ctrl_pass)
         self._socket = socket.socket
-        self._startSocks()
+        self._start_socks()
 
         # Keep an IP address logged
         self.ip = self.check_ip()
 
         # If we want to make sure IP rotation is working
         if test_rotate:
-            self._runTests()
-        self._stopSocks()
+            self._run_tests()
+        self._stop_socks()
 
-    def _setCtrlPass(self, p):
+    def __set_ctrl_pass(self, password):
         """Set password for controller signaling."""
-        if p:
-            self.ctrl_pass = p
+        if password:
+            self.ctrl_pass = password
         elif "TOR_CTRL_PASS" in os.environ:
             self.ctrl_pass = os.environ["TOR_CTRL_PASS"]
 
-    def _setTorController(self):
+    def __set_tor_controller(self):
         """Initialize a Controller with the control port."""
         try:
             self.tor_controller = Controller.from_port(port=self.ctrl_port)
         except Exception as err:
-            raise EnvironmentError(err)
+            raise EnvironmentError(str(err))
 
-    def _startSocks(self):
+    def _start_socks(self):
         """
         Set our tor client as the proxy server.
 
@@ -173,22 +170,23 @@ class TorRequester(object):
         )
         socket.socket = socks.socksocket
 
-    def _stopSocks(self):
+    def _stop_socks(self):
         '''
         unset our tor client as the proxy server
         '''
         socket.socket = self._socket
 
     def stop(self)->None:
-        self._stopSocks()
+        '''stop tor-network'''
+        self._stop_socks()
 
-    def _runTests(self):
+    def _run_tests(self):
         """Setup tests upon initialization."""
         if self.use_tor:
 
             # Check if we are using tor
             print("\nChecking that tor is running...")
-            tor_html = self._checkConvert("https://check.torproject.org")
+            tor_html = self._get_page("https://check.torproject.org")
             running = tor_html.find("title").text
 
             assert "Congratulations" in running, "Tor is not running!"
@@ -205,10 +203,10 @@ class TorRequester(object):
                     3,
                     self.enforce_limit if self.enforce_limit else 49
                 )
-                for i in range(num_tests):
+                for _ in range(num_tests):
                     try:
                         ips.append(self.check_ip())
-                        self._newCircuit()
+                        self._new_circuit()
                         time.sleep(2)
                     except Exception as e:
                         logging.warning(e)
@@ -221,17 +219,16 @@ class TorRequester(object):
                         You may also pass enforce_rotate=False to proceed or \
                         set use_tor=False to skip this process."
                         raise EnvironmentError(msg)
-                    else:
-                        msg = """WARNING: Your external IP was the same for {}
-                        different relay circuits. You may want to make sure
-                        tor is running correctly.""".format(num_tests)
-                        warnings.warn(msg, Warning)
+                    msg = """WARNING: Your external IP was the same for {}
+                    different relay circuits. You may want to make sure
+                    tor is running correctly.""".format(num_tests)
+                    warnings.warn(msg, Warning)
 
                 # Set the IP as the last one
                 self.ip = ips[-1]
         print("Ready.\n")
 
-    def _newCircuit(self):
+    def _new_circuit(self):
         """
         Attempt to rotate the IP by sending tor client signal NEWNYM.
 
@@ -249,30 +246,26 @@ class TorRequester(object):
             authenticate_none(self.tor_controller)
         self.tor_controller.signal(Signal.NEWNYM)
 
-    async def _checkConvert(self, url, headers=None):
-        """Check if we need to return a BeautifulSoup object (or raw res)."""
+    def _get_page(self, url) -> str:
+        """Check if we need to return a html."""
         options = Options()
-        # options.add_argument("no-sandbox")
         options.add_argument("headless")
-        # options.add_argument("start-maximized")
-        # options.add_argument("window-size=1900,1080")
         browser = webdriver.Chrome(chrome_options=options, executable_path='/usr/bin/chromedriver')
-
-        self._startSocks()
+        self._start_socks()
         browser.get(url)
         res = browser.page_source
         browser.quit()
-        self._stopSocks()
+        self._stop_socks()
         return res
 
-    def _updateCount(self):
+    def _update_count(self):
         """Increment counter and check if we need to rotate."""
         self.req_i += 1
         if self.req_i > self.n_requests and self.enforce_rotate:
             self.rotate()
             self.req_i = 0
 
-    def check_ip(self):
+    def check_ip(self) -> str:
         """Check my public IP via tor."""
         return requests.get("http://www.icanhazip.com").text[:-2]
 
@@ -283,7 +276,7 @@ class TorRequester(object):
         new_ip = None
         # Keep rotating until success
         while count < self.enforce_limit:
-            self._newCircuit()
+            self._new_circuit()
             new_ip = self.check_ip()
             # If the ip didn't change, but we want it to...
             if new_ip == self.ip and self.enforce_rotate:
@@ -291,21 +284,20 @@ class TorRequester(object):
                 time.sleep(2)
                 count += 1
                 continue
-            else:
-                self.ip = new_ip
-                logging.info("\nIP successfully rotated. New IP: {}".format(self.ip))
-                break
+            self.ip = new_ip
+            logging.info("\nIP successfully rotated. New IP: {}".format(self.ip))
+            break
 
-    def get(self, url, headers=None):
+    def get(self, url):
         """Return string html content of page from GET using selenium and tor network."""
-        res = asyncio.get_event_loop().run_until_complete(self._checkConvert(url, headers))
-        self._updateCount()
+        res = self._get_page(url)
+        self._update_count()
         return res
 
     def post(self, url, data, headers=None):
         """Return raw response from POST request."""
-        self._startSocks()
+        self._start_socks()
         res = requests.post(url, data=data, headers=headers)
-        self._stopSocks()
-        self._updateCount()
+        self._stop_socks()
+        self._update_count()
         return res
