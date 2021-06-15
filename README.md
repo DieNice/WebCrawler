@@ -3,7 +3,7 @@
 ***
 
 ### *Data flow diagram*
-![DFD](Docs/DFD.jpg)
+![DFD](docs/DFD.jpg)
 
 ### How to install
 ## ``Linux``

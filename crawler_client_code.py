@@ -3,18 +3,18 @@ import json
 import logging
 import click
 import validators
-from SearchResultsParser.search_facade import SearchFacade
-from SearchResultsParser.abstract_parser import AbstractResultParser
-from SearchResultsParser.google_parser import GoogleParser
-from SearchResultsParser.rambler_parser import RamblerParser
-from SearchResultsParser.yandex_parser import YandexParser
-from SearchResultsParser.Filter.filter_urlsdto import FilterUrlsDTO
-from SearchResultsParser.Filter.basic_filter import BasicFilter
-from SearchResultsParser.Filter.replays_decorator import ReplaysFilter
-from SearchResultsParser.Filter.officalsite_decorator import OfficalSiteFilter
-from Mongodb.config import DevelopingConfig
-from Mongodb.models import Page
-from Grabber.grabber import Grabber
+from search_results_parser.search_facade import SearchFacade
+from search_results_parser.abstract_parser import AbstractResultParser
+from search_results_parser.google_parser import GoogleParser
+from search_results_parser.rambler_parser import RamblerParser
+from search_results_parser.yandex_parser import YandexParser
+from search_results_parser.filter.filter_urlsdto import FilterUrlsDTO
+from search_results_parser.filter.basic_filter import BasicFilter
+from search_results_parser.filter.replays_decorator import ReplaysFilter
+from search_results_parser.filter.officalsite_decorator import OfficalSiteFilter
+from mongodb.config import DevelopingConfig
+from mongodb.models import Page
+from grabber.grabber import Grabber
 
 
 def check_name_company(name: str) -> bool:

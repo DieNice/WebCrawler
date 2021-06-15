@@ -1,7 +1,7 @@
 import logging
-from SearchResultsParser.abstract_parser import AbstractResultParser
-from SearchResultsParser.urlsdto import UrlsDTO
-from SearchResultsParser.Filter.filter_urlsdto import FilterUrlsDTO
+from search_results_parser.abstract_parser import AbstractResultParser
+from search_results_parser.urlsdto import UrlsDTO
+from search_results_parser.filter.filter_urlsdto import FilterUrlsDTO
 
 
 class SearchFacade:

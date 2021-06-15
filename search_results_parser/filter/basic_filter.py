@@ -1,4 +1,4 @@
-from SearchResultsParser.urlsdto import UrlsDTO
+from search_results_parser.urlsdto import UrlsDTO
 from .filter_urlsdto import FilterUrlsDTO
 
 

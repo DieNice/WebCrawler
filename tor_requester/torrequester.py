@@ -16,7 +16,7 @@ from selenium.webdriver.chrome.options import Options
 
 class TorRequester():
     """
-    TorRequester is a layer on top of the requests module.
+    tor_requester is a layer on top of the requests module.
 
     Description:
     ------------

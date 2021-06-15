@@ -8,8 +8,8 @@ from dostoevsky.models import FastTextSocialNetworkModel
 from nltk import sent_tokenize
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
-from Mongodb.config import DevelopingConfig
-from Mongodb.models import Page
+from mongodb.config import DevelopingConfig
+from mongodb.models import Page
 
 
 class SentimentAnalyzer():

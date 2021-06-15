@@ -1,5 +1,5 @@
 import logging
-from SentimentAnalyzer.analyzer import SentimentAnalyzer
+from sentiment_analyzer.analyzer import SentimentAnalyzer
 
 if __name__ == '__main__':
     logging.basicConfig(

@@ -1,7 +1,7 @@
 import logging
 import os
 from bs4 import BeautifulSoup as bs
-from TorRequester.torrequester import TorRequester
+from tor_requester.torrequester import TorRequester
 
 
 class Grabber:
