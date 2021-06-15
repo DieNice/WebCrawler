@@ -2,7 +2,6 @@
 import json
 import logging
 import click
-import validators
 from search_results_parser.search_facade import SearchFacade
 from search_results_parser.abstract_parser import AbstractResultParser
 from search_results_parser.google_parser import GoogleParser
@@ -15,75 +14,7 @@ from search_results_parser.filter.officalsite_decorator import OfficalSiteFilter
 from mongodb.config import DevelopingConfig
 from mongodb.models import Page
 from grabber.grabber import Grabber
-
-
-def check_name_company(name: str) -> bool:
-    '''check function of name_company'''
-    if len(name) == 0:
-        raise Exception('Company name cannot be empty')
-    if name.isdigit():
-        raise Exception('Company name cannot contain only numbers')
-    if validators.url(name):
-        raise Exception('Comapany name cannot be URL')
-    return True
-
-
-def check_official_link(official_link: str) -> bool:
-    '''check function of offical link company'''
-    if not validators.url(official_link):
-        raise Exception('Incorrect official site URL')
-    return True
-
-
-def check_num_results(num: int) -> bool:
-    '''check function num results'''
-    if not str(num).isdigit():
-        raise Exception('The number of search results is incorrect')
-    if num < 0:
-        raise Exception('The number of search result can\'t be than less 0')
-    return True
-
-
-def check_choose_searches(choose_str: str) -> bool:
-    '''check function choose searches'''
-    correct_numbers = ['1', '2', '3']
-    choose_str = choose_str.split(' ')
-    for choose in choose_str:
-        if not choose.isdigit():
-            raise Exception(f"{choose} is not number of search engine")
-        if not choose in correct_numbers:
-            raise Exception(f"{choose} is not exists number search engine")
-    return True
-
-
-def check_query_patterns(filepath: str) -> bool:
-    '''check function query patterns'''
-    with open(filepath, 'r') as file:
-        try:
-            query_json = json.load(file)
-        except json.decoder.JSONDecodeError as json_exception:
-            raise Exception("Invalid JSON") from json_exception
-        else:
-            if len(query_json) > 1:
-                raise Exception('The number of keys in the configuration'
-                                ' file cannot be more than 1 key \"queries\"')
-            if len(query_json) < 1:
-                raise Exception('No fields in configuration query patterns')
-        queries: str = query_json['queries']
-        for now_query in queries:
-            if now_query.find('{}') < 0:
-                raise Exception(f"Query \"{now_query}\" missing brackets " + "{}")
-    return True
-
-
-def check_deep(search_deep: int) -> bool:
-    '''check function deep'''
-    if not str(search_deep).isdigit():
-        raise Exception('The deep is incorrect')
-    if search_deep < 0:
-        raise Exception('The deep can\'t be than less or equal 0')
-    return True
-
+from errors import *
 
 if __name__ == '__main__':
     logging.basicConfig(
@@ -92,9 +23,24 @@ if __name__ == '__main__':
         format="%(asctime)s - %(module)s - %(levelname)s - %(funcName)s: %(lineno)d - %(message)s",
         datefmt='%H:%M:%S',
     )
+
+    if not check_network():
+        print("Internet off")
+        exit(1)
+    print("Internet on")
+    connect = DevelopingConfig('crawlerdb', 'root', 'root', 27017)
+    if not connect.check_connection():
+        print("Database not connected")
+        exit(1)
+    print("Database connected successfully")
+    if not check_tor_network():
+        print("Tor network off")
+        exit(1)
+    print("Tor network on")
+
     name_company = input('Enter your company name:')
     link_official_company = input('Enter the link to the official website of the company:')
-    num_results = int(input('Enter the number of search results:'))
+    num_results = input('Enter the number of search results:')
     choose_searches = input("Select search  engines,"
                             " separated by space:\n1. Google \n2. Yandex\n3. Rambler\n")
     deep = int(input('Введите глубину поиска:'))
@@ -106,6 +52,7 @@ if __name__ == '__main__':
     check_query_patterns('query_patterns.json')
     check_deep(deep)
 
+    num_results = int(num_results)
     choose_searches = choose_searches.split(' ')
 
     searchers: AbstractResultParser = []
@@ -155,7 +102,6 @@ if __name__ == '__main__':
             try:
                 now_text = grabber.get_text(link)
             except Exception as exception:
-                print(f"\nCan't connection to page. {link}:{str(exception)}")
                 logging.error(f"\nCan't connection to page. {link}:{str(exception)}")
             else:
                 pages.append(Page(title=link, content=now_text))
@@ -163,7 +109,7 @@ if __name__ == '__main__':
     logging.info('End of scraping pages')
 
     grabber.off_tor()
-    connect = DevelopingConfig('crawlerdb', 'root', 'root', 27017)
+
 
     with click.progressbar(pages, label="Saving to database") as bar:
         for page in bar:
@@ -172,7 +118,7 @@ if __name__ == '__main__':
                 page.save()
             except Exception as exception:
                 logging.error(f'Failed to connect to database:{exception}')
-                raise Exception('Failed to connect to database') from exception
+                raise Exception("Failed to connect to database")
 
     print('Saving data was successful')
     logging.info('Saving data was successful')

@@ -1,4 +1,5 @@
-from mongoengine import connect
+import logging
+from mongoengine.connection import get_db, connect
 
 
 class DevelopingConfig():
@@ -9,6 +10,21 @@ class DevelopingConfig():
         self.username = username
         self.password = passw
         self.port = port
-        connect(self.database, host="mongodb://" + self.username
-                                    + ":" + self.password + "@localhost:"
-                                    + str(self.port) + '/?authSource=admin')
+
+    def check_connection(self) -> bool:
+        try:
+            connect("testdb", host="mongodb://" + self.username
+                                   + ":" + self.password + "@localhost:"
+                                   + str(self.port) + '/?authSource=admin')
+            db = get_db()
+            db.command('dbstats')
+            logging.fatal("Database connected successfully")
+            return True
+        except Exception:
+            logging.fatal("Database not connected")
+            return False
+
+    def connect(self) -> None:
+        self.connection = connect(self.database, host="mongodb://" + self.username
+                                                      + ":" + self.password + "@localhost:"
+                                                      + str(self.port) + '/?authSource=admin')

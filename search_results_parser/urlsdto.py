@@ -1,8 +1,11 @@
+from typing import List
+
+
 class UrlsDTO:
     '''Data transfer class'''
     _urls = [str]
 
-    def __init__(self, urls=None) -> None:
+    def __init__(self, urls: List = []) -> None:
         self._urls = urls
 
     def add(self, newdata: str) -> None:
