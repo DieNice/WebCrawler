@@ -28,8 +28,8 @@ if __name__ == '__main__':
         print("Internet off")
         exit(1)
     print("Internet on")
-    connect = DevelopingConfig('crawlerdb', 'root', 'root', 27017)
-    if not connect.check_connection():
+    db_con = DevelopingConfig('crawlerdb', 'root', 'root', 27017)
+    if not db_con.check_connection():
         print("Database not connected")
         exit(1)
     print("Database connected successfully")
@@ -110,7 +110,7 @@ if __name__ == '__main__':
 
     grabber.off_tor()
 
-
+    db_con.connect()
     with click.progressbar(pages, label="Saving to database") as bar:
         for page in bar:
             logging.info(f"Page saved {page.title}")

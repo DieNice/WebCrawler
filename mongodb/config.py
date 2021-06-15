@@ -1,5 +1,5 @@
 import logging
-from mongoengine.connection import get_db, connect
+from mongoengine.connection import get_db, connect, disconnect
 
 
 class DevelopingConfig():
@@ -10,6 +10,7 @@ class DevelopingConfig():
         self.username = username
         self.password = passw
         self.port = port
+        self.connection = None
 
     def check_connection(self) -> bool:
         try:
@@ -19,6 +20,7 @@ class DevelopingConfig():
             db = get_db()
             db.command('dbstats')
             logging.fatal("Database connected successfully")
+            disconnect()
             return True
         except Exception:
             logging.fatal("Database not connected")

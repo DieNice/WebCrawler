@@ -21,15 +21,20 @@ class SentimentAnalyzer():
         fasttext.FastText.eprint = lambda x: None
         self.stop_words = stopwords.words('russian')
         logging.info("set sropwords")
-        self.connect = None
+        self.con = None
 
     def connect_to_db(self, namedb, usr, pwd, port) -> None:
         '''Connection to db'''
-        self.connect = DevelopingConfig(namedb, usr, pwd, port)
+        self.con = DevelopingConfig(namedb, usr, pwd, port)
+        if not self.con.check_connection():
+            print("Database not connected")
+            exit(1)
+        print("Database connected successfully")
+        self.con.connect()
         logging.info("Sentiment analyzer connected to database")
 
     def __get_data(self):
-        return Page.objects
+        return Page.objects()
 
     def __prepare(self, text):
         sentences = sent_tokenize(text)
