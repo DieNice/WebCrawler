@@ -30,3 +30,6 @@ class DevelopingConfig():
         self.connection = connect(self.database, host="mongodb://" + self.username
                                                       + ":" + self.password + "@localhost:"
                                                       + str(self.port) + '/?authSource=admin')
+
+    def disconnect(self)->None:
+        disconnect()
