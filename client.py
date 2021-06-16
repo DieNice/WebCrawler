@@ -1,4 +1,4 @@
-'''Main file use for automatic scraping html pages'''
+#! /usr/bin/python3.8
 import json
 import logging
 import click
