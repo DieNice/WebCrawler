@@ -12,6 +12,7 @@ from stem.control import Controller
 from stem.connection import authenticate_none, authenticate_password
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+# from pyvirtualdisplay import Display
 
 
 class TorRequester():
@@ -248,14 +249,16 @@ class TorRequester():
 
     def _get_page(self, url) -> str:
         """Check if we need to return a html."""
-        options = Options()
-        options.add_argument("headless")
-        browser = webdriver.Chrome(chrome_options=options, executable_path='/usr/bin/chromedriver')
-        self._start_socks()
+        # options = Options()
+        # options.add_argument("headless")chrome_options=options,
+        # display = Display(visible=0, size=(800, 600))
+        # display.start()
+        browser = webdriver.Chrome(executable_path='/usr/bin/chromedriver')
+        # self._start_socks()
         browser.get(url)
-        res = browser.page_source
+        res = browser.page_source.encode('utf-8')
         browser.quit()
-        self._stop_socks()
+        # display.stop()
         return res
 
     def _update_count(self):

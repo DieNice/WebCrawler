@@ -34,10 +34,10 @@ if __name__ == '__main__':
         print("Database not connected")
         exit(1)
     print("Database connected successfully")
-    if not check_tor_network():
-        print("Tor network off")
-        exit(1)
-    print("Tor network on")
+    # if not check_tor_network():
+    #     print("Tor network off")
+    #     exit(1)
+    # print("Tor network on")
 
     name_company = input('Enter your company name:')
     link_official_company = input('Enter the link to the official website of the company:')

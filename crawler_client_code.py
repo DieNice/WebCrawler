@@ -43,14 +43,14 @@ if __name__ == '__main__':
     num_results = input('Enter the number of search results:')
     choose_searches = input("Select search  engines,"
                             " separated by space:\n1. Google \n2. Yandex\n3. Rambler\n")
-    deep = int(input('Введите глубину поиска:'))
+    # deep = int(input('Введите глубину поиска:'))
 
     check_name_company(name_company)
     check_official_link(link_official_company)
     check_num_results(num_results)
     check_choose_searches(choose_searches)
     check_query_patterns('query_patterns.json')
-    check_deep(deep)
+    # check_deep(deep)
 
     num_results = int(num_results)
     choose_searches = choose_searches.split(' ')
