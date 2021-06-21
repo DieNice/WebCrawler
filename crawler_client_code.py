@@ -108,8 +108,6 @@ if __name__ == '__main__':
     print('End of scraping pages')
     logging.info('End of scraping pages')
 
-    grabber.off_tor()
-
     db_con.connect()
     with click.progressbar(pages, label="Saving to database") as bar:
         for page in bar:

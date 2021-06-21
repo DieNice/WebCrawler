@@ -34,24 +34,18 @@ if __name__ == '__main__':
         print("Database not connected")
         exit(1)
     print("Database connected successfully")
-    # if not check_tor_network():
-    #     print("Tor network off")
-    #     exit(1)
-    # print("Tor network on")
 
     name_company = input('Enter your company name:')
     link_official_company = input('Enter the link to the official website of the company:')
     num_results = input('Enter the number of search results:')
     choose_searches = input("Select search  engines,"
                             " separated by space:\n1. Google \n2. Yandex\n3. Rambler\n")
-    deep = int(input('Введите глубину поиска:'))
 
     check_name_company(name_company)
     check_official_link(link_official_company)
     check_num_results(num_results)
     check_choose_searches(choose_searches)
     check_query_patterns('query_patterns.json')
-    check_deep(deep)
 
     num_results = int(num_results)
     choose_searches = choose_searches.split(' ')
@@ -108,8 +102,6 @@ if __name__ == '__main__':
                 pages.append(Page(title=link, content=now_text))
     print('End of scraping pages')
     logging.info('End of scraping pages')
-
-    grabber.off_tor()
 
     db_con.connect()
     with click.progressbar(pages, label="Saving to database") as bar:

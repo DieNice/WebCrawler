@@ -1,7 +1,8 @@
 import logging
 import os
 from bs4 import BeautifulSoup as bs
-from tor_requester.torrequester import TorRequester
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
 class Grabber:
@@ -9,12 +10,15 @@ class Grabber:
     filename = ""
     path = ""
 
-    def __init__(self) -> None:
-        self.tor_requester = TorRequester(ctrl_pass='mypassword', n_requests=5)
+    # def __init__(self) -> None:
+    #     self.tor_requester = TorRequester(ctrl_pass='mypassword', n_requests=5)
 
     def get_text(self, url_address):
         ''':return parsed text from url by bs'''
-        response = self.tor_requester.get(url_address)
+        browser = webdriver.Chrome(executable_path='/usr/bin/chromedriver')
+        browser.get(url_address)
+        response = browser.page_source.encode('utf-8')
+        browser.quit()
         soup = bs(response, 'html.parser')
         result = soup.text
         return result
@@ -37,8 +41,3 @@ class Grabber:
         with open(str(self.path) + '/' + str(self.filename), mode="a") as file:
             file.write(text)
             file.close()
-
-    def off_tor(self):
-        '''off tor-network'''
-        self.tor_requester.stop()
-        logging.info("tor network off")
